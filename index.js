@@ -12,12 +12,13 @@ class Spinnies {
   constructor(options = {}) {
     options = purgeSpinnersOptions(options);
     this.options = {
-      spinnerColor: 'greenBright',
-      succeedColor: 'green',
-      failColor: 'red',
+      spinnerColor: "greenBright",
+      succeedColor: "green",
+      failColor: "red",
       spinner: terminalSupportsUnicode() ? dots : dashes,
       disableSpins: false,
-      ...options
+      sort: false,
+      ...options,
     };
     this.spinners = {};
     this.isCursorHidden = false;
@@ -135,21 +136,42 @@ class Spinnies {
     let output = '';
     const linesLength = [];
     const hasActiveSpinners = this.hasActiveSpinners();
-    Object
-      .values(this.spinners)
-      .map(({ text, status, color, spinnerColor, succeedColor, failColor, succeedPrefix, failPrefix, indent }) => {
+    let spinners = this.spinners;
+    if (this.options.sort) {
+      spinners = Object.keys(this.spinners)
+        .sort()
+        .reduce((acc, key) => {
+          acc[key] = this.spinners[key];
+          return acc;
+        }, {});
+    }
+
+    Object.values(spinners).map(
+      ({
+        text,
+        status,
+        color,
+        spinnerColor,
+        succeedColor,
+        failColor,
+        succeedPrefix,
+        failPrefix,
+        indent,
+      }) => {
         let line;
         let prefixLength = indent || 0;
-        if (status === 'spinning') {
+        if (status === "spinning") {
           prefixLength += frame.length + 1;
           text = breakText(text, prefixLength);
-          line = `${chalk[spinnerColor](frame)} ${color ? chalk[color](text) : text}`;
+          line = `${chalk[spinnerColor](frame)} ${
+            color ? chalk[color](text) : text
+          }`;
         } else {
-          if (status === 'succeed') {
+          if (status === "succeed") {
             prefixLength += succeedPrefix.length + 1;
             if (hasActiveSpinners) text = breakText(text, prefixLength);
             line = `${chalk.green(succeedPrefix)} ${chalk[succeedColor](text)}`;
-          } else if (status === 'fail') {
+          } else if (status === "fail") {
             prefixLength += failPrefix.length + 1;
             if (hasActiveSpinners) text = breakText(text, prefixLength);
             line = `${chalk.red(failPrefix)} ${chalk[failColor](text)}`;
@@ -160,7 +182,8 @@ class Spinnies {
         }
         linesLength.push(...getLinesLength(text, prefixLength));
         output += indent ? `${" ".repeat(indent)}${line}\n` : `${line}\n`;
-      });
+      }
+    );
 
     if(!hasActiveSpinners) readline.clearScreenDown(this.stream);
     writeStream(this.stream, output, linesLength);
@@ -169,7 +192,17 @@ class Spinnies {
   }
 
   setRawStreamOutput() {
-    Object.values(this.spinners).forEach(i => {
+    let spinners = this.spinners;
+    if (this.options.sort) {
+      spinners = Object.keys(this.spinners)
+        .sort()
+        .reduce((acc, key) => {
+          acc[key] = this.spinners[key];
+          return acc;
+        }, {});
+    }
+
+    Object.values(spinners).forEach((i) => {
       process.stderr.write(`- ${i.text}\n`);
     });
   }

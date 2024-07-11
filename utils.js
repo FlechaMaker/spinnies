@@ -19,13 +19,21 @@ function purgeSpinnerOptions(options) {
   return { ...colors, ...opts };
 }
 
-function purgeSpinnersOptions({ spinner, disableSpins, ...others }) {
+function purgeSpinnersOptions({ spinner, disableSpins, sort, ...others }) {
   const colors = colorOptions(others);
   const prefixes = prefixOptions(others);
-  const disableSpinsOption = typeof disableSpins === 'boolean' ? { disableSpins } : {};
+  const disableSpinsOption =
+    typeof disableSpins === "boolean" ? { disableSpins } : {};
+  const sortOption = typeof sort === "boolean" ? { sort } : {};
   spinner = turnToValidSpinner(spinner);
 
-  return { ...colors, ...prefixes, ...disableSpinsOption, spinner }
+  return {
+    ...colors,
+    ...prefixes,
+    ...disableSpinsOption,
+    ...sortOption,
+    spinner,
+  };
 }
 
 function turnToValidSpinner(spinner = {}) {
